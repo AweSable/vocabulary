@@ -1268,7 +1268,8 @@ function changeWord() {
   }, 500);
   answer = keys[count];
   setTimeout(() => {
-    outputText.innerText = vocabulary[answer];
+    // outputText.innerText = vocabulary[answer];
+    outputText.innerText = initialVocabulary[answer];
     if (Object.keys(repeatWords).indexOf(answer) != -1) {
       bookmark.classList.add('bookmark_filled');
     } else {
@@ -1285,6 +1286,11 @@ function nextWord() {
     count++;
   } else {
     count = 0;
+    if (repeatState){
+      keys = Object.keys(repeatWords);
+      len = keys.length - 1;
+      qtyNumber.innerText = len + 1 + '';
+    }
   }
   changeWord();
   if (autoNextSelector) {
@@ -1346,6 +1352,10 @@ function keyInterpret(e) {
       break;
     case 'F3':
       nextWord();
+      return e.preventDefault();
+      break;
+    case 'F5':
+      changeBookmarkState();
       return e.preventDefault();
       break;
     case 'Enter':
@@ -1459,6 +1469,11 @@ function changeBookmarkState() {
   bookmark.classList.toggle('bookmark_filled');
   if (Object.keys(repeatWords).indexOf(answer) != -1) {
     delete repeatWords[answer];
+    if (repeatState){
+      if (Object.keys(repeatWords).length == 0){
+        repeat();
+      }
+    }
   } else {
     repeatWords[answer] = initialVocabulary[answer];
   }
@@ -1498,8 +1513,8 @@ function randomSet() {
   if (!randomState) {
     randomState = !randomState;
     start = +prompt('Введите начальную границу выборки', 1) - 1;
-    end = +prompt('Введите конечную границу выборки', len);
-    subSetSize = +prompt('Введите количество слов в выборке. \r Ноль, если выборка полная.', 0);
+    end = +prompt('Введите конечную границу выборки', count + 1);
+    subSetSize = +prompt('Введите количество слов в выборке. \r Ноль, если выборка полная.', 20);
     subSetSize = subSetSize || (end - start);
     if (end > start & subSetSize <= end - start) {
       let keysSet = keys.slice(start, end);
@@ -1531,6 +1546,19 @@ function randomSet() {
     changeWord();
   }
 }
+
+// function turnOffCurrentMode(modeState, modeBtn) {
+//   modeState = !modeState;
+//   modeBtn.classList.remove('active');
+//   vocabulary = initialVocabulary;
+//   keys = Object.keys(vocabulary);
+//   len = keys.length - 1;
+//   qtyNumber.innerText = len + 1 + '';
+//   count = continueWord;
+//   answer = keys[count];
+//   currentNumber.value = count + 1;
+//   changeWord();
+// }
 
 function shuffle(array){
 	const len = array.length;
