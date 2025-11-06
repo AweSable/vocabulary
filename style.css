@@ -17,6 +17,9 @@ body {
 .areas {
   display: flex;
   align-items: center;
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
 }
 .russian {
   display: flex;
@@ -51,7 +54,11 @@ body {
   overflow: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  border: solid 2px transparent;
+  transition:  0.1s ease;
+  transition-delay: .2s;
 }
+
 .input_text {
   flex: 2 1 1em;
   min-height: fit-content;
@@ -70,6 +77,27 @@ body {
   width: 0;
   height: 0;
 } */
+
+.right_answer {
+  /* animation-name: light_border;
+  animation-duration: 0.5s;
+  animation-delay: 0.2s; */
+  border: solid 2px green;
+}
+
+@keyframes light_border {
+  from {
+    border: solid 2px transparent;
+    animation-timing-function: ease;
+  }
+  20%, to {
+    border: solid 2px green;
+    animation-timing-function: ease;
+  }
+  to {
+    border: solid 2px transparent;
+  }
+}
 
 .buttons_group {
   display: flex;
@@ -197,10 +225,18 @@ body {
   -webkit-appearance: none;
   margin: 0;
 }
+.english {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .output_area {
   position: relative;
+  margin-bottom: 4px;
 }
-
+.answer_area {
+  margin-top: 4px;
+}
 .bookmark {
   position: absolute;
   right: 20px;
@@ -210,6 +246,7 @@ body {
   background-image: url('assets/bookmark.svg');
   background-repeat: no-repeat;
   background-size: contain;
+  transition: 0.1s;
 }
 .bookmark:hover,
 .bookmark_filled {
@@ -260,4 +297,49 @@ body {
   padding: 0 20px;
   justify-content: space-evenly;
   width: 100%;
+}
+.btn_swap {
+  width: 40px;
+  height: 40px;
+  background-image: url('assets/swap.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  transform: rotate(90deg);
+  transition: 0.2s;
+}
+
+@media (max-width: 1024px) {
+  .button_text {
+    font-size: 16px;
+  }
+  .button, .button_run {
+    width: 141px;
+    height: 40px;
+  }
+  .areas {
+    max-width: 940px;
+  }
+  .area {
+    width: 450px;
+    height: 210px;
+    font-size: 32px;
+    margin: 30px 10px;
+    padding: 16px;
+  }
+  .answer_area {
+    margin-top: 4px;
+  }
+  .output_area {
+    margin-bottom: 4px;
+  }
+  .btn_swap {
+    width: 32px;
+    height: 32px;
+  }
+  .bookmark {
+    right: 15px;
+    top: 15px;
+    width: 27px;
+    height: 27px;
+  }
 }
