@@ -1,4 +1,4 @@
-const initialVocabulary = ﻿{
+let initialVocabulary = ﻿{
  "That’s providing you can": "Это при условии, что вы сможете",
  "get on": "ладить",
  "attraction": "привлекательность",
@@ -1212,14 +1212,13 @@ const initialVocabulary = ﻿{
  "for a while": "какое-то время"
 }
 
-let vocabulary = initialVocabulary;
-let repeatWords = {};
-let randomWords = {};
+let repeatWords = new Set;
 const body = document.querySelector('.body');
 const outputText = document.querySelector('.output_text');
 const answerText = document.querySelector('.answer_text');
 const inputText = document.querySelector('.input_text');
-let keys = Object.keys(vocabulary);
+const areaEditable = document.querySelector('.area_editable');
+let keys = Object.keys(initialVocabulary);
 let len = keys.length - 1;
 let count = 0;
 let answer = '';
@@ -1238,15 +1237,29 @@ const currentNumber = document.querySelector('.input_number');
 const btnToFirstWord = document.querySelector('.to_first_word');
 const bookmark = document.querySelector('.bookmark');
 const btnRepeat = document.querySelector('.btn_repeat');
-let repeatState = false;
-let randomState = false;
+// let repeatState = false;
+// let randomState = false;
 let continueWord = 0;
 const fromSetting = document.querySelector('.from_setting');
 const untilSetting = document.querySelector('.until_setting');
 const btnRandom = document.querySelector('.btn_random');
+const btnSwap = document.querySelector('.btn_swap');
+let response;
 let start = 1;
 let end = 1;
 let subSetSize = 0;
+const face = true;
+const back = false;
+let cardSide = face;
+const objRepeat = {
+  stateTurnedOn: false,
+  btn: btnRepeat,
+}
+const objRandom = {
+  stateTurnedOn: false,
+  btn: btnRandom,
+}
+
 // const arrBookmarkedPages = [];
 
 qtyNumber.innerText = len + 1 + '';
@@ -1256,6 +1269,7 @@ btnAnswer.addEventListener('click', showAnswer);
 btnNext.addEventListener('click', nextWord);
 btnPrev.addEventListener('click', prevWord);
 btnRun.addEventListener('click', changeAutoNextSelector);
+btnSwap.addEventListener('click', turnCardFace);
 
 function changeWord() {
   outputText.classList.add('invisible');
@@ -1266,11 +1280,11 @@ function changeWord() {
     answerText.innerText = "";
     inputText.innerText = "";
   }, 500);
-  answer = keys[count];
+  // answer = keys[count];
+  answer = getAnswer();
   setTimeout(() => {
-    // outputText.innerText = vocabulary[answer];
-    outputText.innerText = initialVocabulary[answer];
-    if (Object.keys(repeatWords).indexOf(answer) != -1) {
+    outputText.innerText = getWord();
+    if (repeatWords.size && repeatWords.has(keys[count])) {
       bookmark.classList.add('bookmark_filled');
     } else {
       bookmark.classList.remove('bookmark_filled');
@@ -1286,8 +1300,8 @@ function nextWord() {
     count++;
   } else {
     count = 0;
-    if (repeatState){
-      keys = Object.keys(repeatWords);
+    if (objRepeat.stateTurnedOn){
+      keys = Array.from(repeatWords);
       len = keys.length - 1;
       qtyNumber.innerText = len + 1 + '';
     }
@@ -1321,7 +1335,6 @@ function prevWord() {
   if (autoNextSelector) {
     changeAutoNextSelector();
   }
-  // answerText.innerText = answer;
   currentNumber.value = count + 1;
 }
 
@@ -1392,6 +1405,14 @@ function keyInterpret(e) {
           }, 1000);
         }
       }
+      const answerInLowerCase = getAnswer().toLowerCase().trim();
+      const inputInLowerCase = inputText.innerText.toLowerCase().trim() + e.key;
+      // const inputInLowerCase = inputText.innerText.toLowerCase().trim();
+      if (answerInLowerCase == inputInLowerCase) {
+        areaEditable.classList.add('right_answer');
+      } else {
+        areaEditable.classList.remove('right_answer');
+      }
   }
 }
 
@@ -1417,14 +1438,17 @@ function changeAutoNextSelector(){
 
 function setLocalStorage() {
   localStorage.setItem('count', count);
-  if (repeatState) {
+  if (repeatWords.size != 0) {
+    localStorage.setItem('repeatWords', JSON.stringify(Array.from(repeatWords)));
+  } else {
+    localStorage.setItem('repeatWords', '');
+  }
+  if (objRepeat.stateTurnedOn) {
     localStorage.setItem('continueWord', continueWord);
-    localStorage.setItem('repeatState', repeatState);
-    localStorage.setItem('repeatWords', JSON.stringify(repeatWords));
+    localStorage.setItem('repeatState', objRepeat.stateTurnedOn);
   } else {
     localStorage.setItem('continueWord', '');
     localStorage.setItem('repeatState', '');
-    localStorage.setItem('repeatWords', '');
   }
 }
 window.addEventListener('beforeunload', setLocalStorage);
@@ -1432,17 +1456,25 @@ window.addEventListener('beforeunload', setLocalStorage);
 function getLocalStorage() {
   if (localStorage.getItem('count')) {
     count = +localStorage.getItem('count');
-    answer = keys[count];
     continueWord = +localStorage.getItem('continueWord');
-    repeatState = Boolean(localStorage.getItem('repeatState'));
+    objRepeat.stateTurnedOn = Boolean(localStorage.getItem('repeatState'));
+    if (localStorage.getItem('repeatWords')) {
+      repeatWords = new Set(JSON.parse(localStorage.getItem('repeatWords')));
+    }
   }
-  if (repeatState) {
-    repeatWords = JSON.parse(localStorage.getItem('repeatWords'));
-    repeatState = !repeatState;
-    repeat();
+  // answer = keys[count];
+  answer = getAnswer();
+  if (objRepeat.stateTurnedOn) {
+    keys = Array.from(repeatWords);
+    updatePage(objRepeat);
   } else {
-    outputText.innerText = vocabulary[answer];
+    outputText.innerText = getWord();
     currentNumber.value = count + 1;
+    if (repeatWords.size && repeatWords.has(getKey())) {
+      bookmark.classList.add('bookmark_filled');
+    } else {
+      bookmark.classList.remove('bookmark_filled');
+    }
   }
 }
 window.addEventListener('load', getLocalStorage);
@@ -1450,7 +1482,8 @@ window.addEventListener('load', getLocalStorage);
 currentNumber.addEventListener('change', goToWord);
 function goToWord() {
   count = currentNumber.value - 1;
-  answer = keys[count];
+  // answer = keys[count];
+  answer = getAnswer();
   // outputText.innerText = vocabulary[answer];
   changeWord();
 }
@@ -1467,98 +1500,91 @@ currentNumber.style.width = qtyNumber.offsetWidth + 'px';
 bookmark.addEventListener('click', changeBookmarkState);
 function changeBookmarkState() {
   bookmark.classList.toggle('bookmark_filled');
-  if (Object.keys(repeatWords).indexOf(answer) != -1) {
-    delete repeatWords[answer];
-    if (repeatState){
-      if (Object.keys(repeatWords).length == 0){
-        repeat();
+  if (repeatWords.size && repeatWords.has(getKey())) {
+    repeatWords.delete(answer);
+    if (objRepeat.stateTurnedOn){
+      if (repeatWords.size == 0){
+        repeatToggle();
       }
     }
   } else {
-    repeatWords[answer] = initialVocabulary[answer];
+    repeatWords.add(keys[count]);
   }
 }
 
-btnRepeat.addEventListener('click', repeat);
-function repeat() {
-  if (!repeatState) {
-    if (Object.keys(repeatWords).length != 0) {
-      btnRepeat.classList.add('active');
-      repeatState = !repeatState;
-      vocabulary = repeatWords;
-      keys = Object.keys(vocabulary);
-      len = keys.length - 1;
-      qtyNumber.innerText = len + 1 + '';
+btnRepeat.addEventListener('click', repeatToggle);
+function repeatToggle() {
+  if (objRandom.stateTurnedOn) randomSet();
+  if (objRepeat.stateTurnedOn) {
+    modeOff(objRepeat);
+    updatePage(objRepeat);
+  } else {
+    if (repeatWords.size) {
+      objRepeat.stateTurnedOn = true;
       continueWord = count;
       count = 0;
-      answer = keys[count];
-      currentNumber.value = count + 1;
-      changeWord();
+      keys = Array.from(repeatWords);
+      updatePage(objRepeat);
     }
-  } else {
-    repeatState = !repeatState;
-    btnRepeat.classList.remove('active');
-    vocabulary = initialVocabulary;
-    keys = Object.keys(vocabulary);
-    len = keys.length - 1;
-    qtyNumber.innerText = len + 1 + '';
-    count = continueWord;
-    answer = keys[count];
-    currentNumber.value = count + 1;
-    changeWord();
   }
 }
+
+function modeOff(objMode) {
+  objMode.stateTurnedOn = false;
+  count = continueWord;
+  keys = Object.keys(initialVocabulary);
+}
+
+function updatePage(objMode) {
+  objMode.btn.classList.toggle('active');
+  len = keys.length - 1;
+  qtyNumber.innerText = len + 1 + '';
+  answer = getAnswer();
+  currentNumber.value = count + 1;
+  changeWord();
+}
+
 btnRandom.addEventListener('click', randomSet);
 function randomSet() {
-  if (!randomState) {
-    randomState = !randomState;
-    start = +prompt('Введите начальную границу выборки', 1) - 1;
-    end = +prompt('Введите конечную границу выборки', count + 1);
-    subSetSize = +prompt('Введите количество слов в выборке. \r Ноль, если выборка полная.', 20);
+  if (objRepeat.stateTurnedOn) {
+    modeOff(objRepeat);
+    updatePage(objRepeat);
+  }
+  if (objRandom.stateTurnedOn) {
+    modeOff(objRandom);
+    updatePage(objRandom);
+  } else {
+    try {
+      start = +safePrompt('Введите начальную границу выборки', 1) - 1;
+      end = +safePrompt('Введите конечную границу выборки', count + 1);
+      subSetSize = +safePrompt('Введите количество слов в выборке. \r Ноль, если выборка полная.', 20);
+    } catch (e) {
+      return;
+    }
     subSetSize = subSetSize || (end - start);
     if (end > start & subSetSize <= end - start) {
+      objRandom.stateTurnedOn = !objRandom.stateTurnedOn;
       let keysSet = keys.slice(start, end);
-      btnRandom.classList.add('active');
       // randomWords;
       shuffle(keysSet);
       // let keysSubset = keysSet.slice(0, subSetSize);
-      keys = keysSet.slice(0, subSetSize);
-      len = keys.length - 1;
-      qtyNumber.innerText = len + 1 + '';
       continueWord = count;
       count = 0;
-      answer = keys[count];
-      currentNumber.value = count + 1;
-      changeWord();
+      keys = keysSet.slice(0, subSetSize);
+      updatePage(objRandom);
     } else {
       alert('Введены некорректные данные, попробуйте снова.');
     }
-  } else {
-    randomState = !randomState;
-    btnRandom.classList.remove('active');
-    vocabulary = initialVocabulary;
-    keys = Object.keys(vocabulary);
-    len = keys.length - 1;
-    qtyNumber.innerText = len + 1 + '';
-    count = continueWord;
-    answer = keys[count];
-    currentNumber.value = count + 1;
-    changeWord();
   }
 }
 
-// function turnOffCurrentMode(modeState, modeBtn) {
-//   modeState = !modeState;
-//   modeBtn.classList.remove('active');
-//   vocabulary = initialVocabulary;
-//   keys = Object.keys(vocabulary);
-//   len = keys.length - 1;
-//   qtyNumber.innerText = len + 1 + '';
-//   count = continueWord;
-//   answer = keys[count];
-//   currentNumber.value = count + 1;
-//   changeWord();
-// }
+function safePrompt(message, defVal) {
+    const result = prompt(message, defVal);
+    if (result === null) {
+        throw new Error('Операция отменена пользователем');
+    }
+    return result;
+}
 
 function shuffle(array){
 	const len = array.length;
@@ -1567,4 +1593,33 @@ function shuffle(array){
 		[array[i], array[j]] = [array[j], array[i]];
 	}
     return array;
+}
+
+function turnCardFace() {
+  cardSide = !cardSide;
+  changeWord();
+}
+
+function getAnswer() {
+  let res = undefined;
+  if (cardSide == face){
+    res = keys[count];
+  } else {
+    res = initialVocabulary[keys[count]];
+  }
+  return res;
+}
+
+function getWord() {
+  let res = undefined;
+  if (cardSide == back){
+    res = keys[count];
+  } else {
+    res = initialVocabulary[keys[count]];
+  }
+  return res;
+}
+
+function getKey() {
+  return initialVocabulary[keys[count]];
 }
