@@ -1260,6 +1260,8 @@ const objRandom = {
   btn: btnRandom,
 }
 
+let wordStatisticList = {};
+
 // const arrBookmarkedPages = [];
 
 qtyNumber.innerText = len + 1 + '';
@@ -1270,8 +1272,20 @@ btnNext.addEventListener('click', nextWord);
 btnPrev.addEventListener('click', prevWord);
 btnRun.addEventListener('click', changeAutoNextSelector);
 btnSwap.addEventListener('click', turnCardFace);
+inputText.addEventListener('keyup', checkAnswer);
+
+function checkAnswer() {
+  if (userAnswerIsTrue()) {
+    areaEditable.classList.add('right_answer');
+    wordStatisticList[keys[count]].rightAnswerQueue++;
+  } else {
+    areaEditable.classList.remove('right_answer');
+  }
+}
+
 
 function changeWord() {
+  areaEditable.classList.remove('right_answer');
   outputText.classList.add('invisible');
   answerText.classList.add('invisible');
   inputText.classList.add('invisible');
@@ -1296,6 +1310,13 @@ function changeWord() {
 }
 
 function nextWord() {
+  const inputNotEmpty = inputText.innerText;
+  const answerIsFalse = !userAnswerIsTrue();
+  const rightQueueIsSmall = wordStatisticList[keys[count]].rightAnswerQueue < 10;
+  const wordIsBookmarked = repeatWords.has(keys[count]);
+  if (inputNotEmpty && answerIsFalse && rightQueueIsSmall && wordIsBookmarked) {
+    wordStatisticList[keys[count]].rightAnswerQueue = 0;
+  }
   if (count < len){
     count++;
   } else {
@@ -1356,23 +1377,24 @@ function keyInterpret(e) {
   // console.log(e.key);
   switch (e.key){
     case 'F2':
+      e.preventDefault();
       showAnswer();
-      return e.preventDefault();
       break;
     case 'F1':
+      e.preventDefault();
       prevWord();
-      return e.preventDefault();
       break;
     case 'F3':
+      e.preventDefault();
       nextWord();
-      return e.preventDefault();
       break;
     case 'F5':
+      e.preventDefault();
       changeBookmarkState();
-      return e.preventDefault();
       break;
     case 'Enter':
       if (e.target != currentNumber) {
+        e.preventDefault();
         if (answerText.innerHTML == '') {
           showAnswer();
           if (waitingTimeoutId) {
@@ -1382,7 +1404,6 @@ function keyInterpret(e) {
         } else {
           nextWord();
         }
-        return e.preventDefault();
       }
       break;
     default:
@@ -1405,15 +1426,15 @@ function keyInterpret(e) {
           }, 1000);
         }
       }
-      const answerInLowerCase = getAnswer().toLowerCase().trim();
-      const inputInLowerCase = inputText.innerText.toLowerCase().trim() + e.key;
-      // const inputInLowerCase = inputText.innerText.toLowerCase().trim();
-      if (answerInLowerCase == inputInLowerCase) {
-        areaEditable.classList.add('right_answer');
-      } else {
-        areaEditable.classList.remove('right_answer');
-      }
   }
+}
+
+function userAnswerIsTrue() {
+  const answerInLowerCase = getAnswer().toLowerCase().trim();
+  answerInLowerCase.replace("’", "'");
+  const inputInLowerCase = inputText.innerText.toLowerCase().trim();
+  inputInLowerCase.replace("’", "'");
+  return answerInLowerCase == inputInLowerCase;
 }
 
 function changeAutoNextSelector(){
@@ -1450,6 +1471,7 @@ function setLocalStorage() {
     localStorage.setItem('continueWord', '');
     localStorage.setItem('repeatState', '');
   }
+  localStorage.setItem('wordStatisticList', JSON.stringify(wordStatisticList));
 }
 window.addEventListener('beforeunload', setLocalStorage);
 
@@ -1461,6 +1483,17 @@ function getLocalStorage() {
     if (localStorage.getItem('repeatWords')) {
       repeatWords = new Set(JSON.parse(localStorage.getItem('repeatWords')));
     }
+    wordStatisticList = JSON.parse(localStorage.getItem('wordStatisticList'));
+  }
+  if (wordStatisticList[keys[0]] == undefined) {
+    keys.forEach((key) => {
+      const wordStatistic = {
+        lastBookmarked: '',
+        showings: [],
+        rightAnswerQueue: 0,
+      };
+      wordStatisticList[key] = wordStatistic;
+    });
   }
   // answer = keys[count];
   answer = getAnswer();
@@ -1500,7 +1533,7 @@ currentNumber.style.width = qtyNumber.offsetWidth + 'px';
 bookmark.addEventListener('click', changeBookmarkState);
 function changeBookmarkState() {
   bookmark.classList.toggle('bookmark_filled');
-  if (repeatWords.size && repeatWords.has(getKey())) {
+  if (repeatWords.size && repeatWords.has(keys[count])) {
     repeatWords.delete(answer);
     if (objRepeat.stateTurnedOn){
       if (repeatWords.size == 0){
@@ -1509,6 +1542,7 @@ function changeBookmarkState() {
     }
   } else {
     repeatWords.add(keys[count]);
+    wordStatisticList[keys[count]].lastBookmarked = new Date().toLocaleDateString();
   }
 }
 
@@ -1546,6 +1580,18 @@ function updatePage(objMode) {
 
 btnRandom.addEventListener('click', randomSet);
 function randomSet() {
+  let len;
+  let keysSet;
+  let tempSet;
+  let wellKnownWords;
+  let wellKnownWordsFiltered;
+  let excludedWords = [];
+  let qtySameItems;
+  let limOnDeletion;
+  let setA;
+  let setB;
+  let setC;
+  let setF;
   if (objRepeat.stateTurnedOn) {
     modeOff(objRepeat);
     updatePage(objRepeat);
@@ -1561,12 +1607,54 @@ function randomSet() {
     } catch (e) {
       return;
     }
-    subSetSize = subSetSize || (end - start);
-    if (end > start & subSetSize <= end - start) {
+    if (end > start) {
+      len = end - start;
+      subSetSize = Math.min(subSetSize, len) || len;
       objRandom.stateTurnedOn = !objRandom.stateTurnedOn;
-      let keysSet = keys.slice(start, end);
+      keysSet = keys.slice(start, end);
       // randomWords;
       shuffle(keysSet);
+      limOnDeletion = len - subSetSize;
+      if (limOnDeletion) {
+        wellKnownWords = keys.filter((key) => wordStatisticList[key].rightAnswerQueue >= 3);
+        if (wellKnownWords) {
+          console.log('Base keyset:');
+          console.log(keysSet.slice(0, subSetSize));
+          console.log('Well known words:');
+          console.log(wellKnownWords);
+          setA = new Set(keysSet);
+          setB = new Set(wellKnownWords);
+          console.log('setB from well known words:');
+          console.log(setB);
+          setC = setB.intersection(setA);
+          setF = new Set(keysSet.slice(0,subSetSize));
+          if (setC.size) {
+            if (setC.size > limOnDeletion) {
+              setC = new Set([...setC].slice(0, limOnDeletion));
+            }
+            setA = setA.difference(setC);
+            keysSet = Array.from(setA);
+            console.log('Excluded words:');
+            console.log([...setF.intersection(setC)]);
+            console.log('Final keyset:');
+            console.log(keysSet.slice(0, subSetSize));
+          }
+
+          //wellKnownWordsFiltered = wellKnownWords.filter((key) => tempSet.has(key));
+          // console.log('Excluded words:');
+          // console.log(wellKnownWordsFiltered);
+          // while (wellKnownWordsFiltered.length > 0 && tempSet.size > subSetSize) {
+          //   tempSet.delete(wellKnownWordsFiltered.pop());
+          // }
+          // if (tempSet.size < keysSet.length) {
+          //   // const n = Array.from(tempSet).slice(0, subSetSize);
+          //   // excludedWords = keysSet.slice(0, subSetSize).filter((item) => !n.has(item));
+          //   keysSet = Array.from(tempSet);
+          //   console.log('Final keyset:');
+          //   console.log(keysSet.slice(0, subSetSize));
+          // }
+        }
+      }
       // let keysSubset = keysSet.slice(0, subSetSize);
       continueWord = count;
       count = 0;
@@ -1622,4 +1710,8 @@ function getWord() {
 
 function getKey() {
   return initialVocabulary[keys[count]];
+}
+function getWellknownWords(tresold) {
+  tresold = tresold || 3;
+  console.log(Object.keys(initialVocabulary).filter((key) => wordStatisticList[key].rightAnswerQueue >= tresold));
 }
