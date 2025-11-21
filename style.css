@@ -371,6 +371,7 @@ body {
 @media (max-width: 768px) {
   .main {
     padding-top: 10px;
+    justify-content: flex-start;
   }
   .navigation {
     margin-bottom: 15px;
@@ -402,5 +403,54 @@ body {
   }
   .answer_area {
     margin-bottom: 0;
+  }
+  .opposite_to_navigation {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .navigation {
+    margin-bottom: 8px;
+  }
+  .buttons_group_level1, .buttons_group {
+    height: 48px;
+  }
+  .buttons_group {
+    column-gap: 15px;
+  }
+  .area {
+    flex: 0 0 150px;
+  }
+  .area_editable {
+    margin: 15px 0 8px 0;
+  }
+  .button_run {
+    order: -1;
+    margin-bottom: 8px;
+  }
+  .output_area {
+    margin-top: 0;
+  }
+  .bookmark {
+    right: 12px;
+    top: 12px;
+    width: 24px;
+    height: 24px;
+  }
+  .area_text {
+    font-size: 24px;
+    line-height: normal;
+  }
+  .btn_swap {
+    flex: 0 0 24px;
+    width: 24px;
+  }
+  .scale:hover {
+    box-shadow: none;
+    cursor: none;
+  }
+  .scale:active {
+    /* background-color: lightblue; */
   }
 }
