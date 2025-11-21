@@ -1432,8 +1432,10 @@ function keyInterpret(e) {
 function userAnswerIsTrue() {
   const answerInLowerCase = getAnswer().toLowerCase().trim();
   answerInLowerCase.replace("’", "'");
+  answerInLowerCase.replace("‘", "'");
   const inputInLowerCase = inputText.innerText.toLowerCase().trim();
   inputInLowerCase.replace("’", "'");
+  inputInLowerCase.replace("‘", "'");
   return answerInLowerCase == inputInLowerCase;
 }
 
@@ -1483,7 +1485,10 @@ function getLocalStorage() {
     if (localStorage.getItem('repeatWords')) {
       repeatWords = new Set(JSON.parse(localStorage.getItem('repeatWords')));
     }
-    wordStatisticList = JSON.parse(localStorage.getItem('wordStatisticList'));
+    if (localStorage.getItem('wordStatisticList') != null) {
+      wordStatisticList = JSON.parse(localStorage.getItem('wordStatisticList'));
+    }
+    // wordStatisticList = JSON.parse(localStorage.getItem('wordStatisticList'));
   }
   if (wordStatisticList[keys[0]] == undefined) {
     keys.forEach((key) => {
