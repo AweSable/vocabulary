@@ -7,6 +7,42 @@
 	<title>Learn english</title>
 </head>
 <body class="body">
+	<div class="toolbar">
+		<div class="container">
+			<div class="toolbar_btn btn_menu">Меню</div>
+			<ul class="menu">
+				<li class="menu--item delete_bookmarks">
+					<span class="menu--text">Удалить слова из закладок</span>
+				</li>
+				<!-- <li class="menu--item">
+					<span class="menu--text">Заполнитель</span>
+				</li>
+				<li class="menu--item">
+					<span class="menu--text">Заполнитель</span>
+				</li>
+				<li class="menu--item">
+					<span class="menu--text">Заполнитель</span>
+				</li> -->
+			</ul>
+		</div>
+		<div class="toolbar_btn btn_settings">Настройки</div>
+		<div class="settings-container hidden">
+			<ul class="settings">
+				<li class="setting-item">
+					<input class="setting-option option_right_answ_behavior" type="checkbox" id="rightAnswBehavior" name="rightAnswBehavior" value="0">
+					<label class="option-label" for="rightAnswBehavior">Удалять слова из закладок, если при повторе слово написано верно</label>
+				</li>
+				<li class="setting-item">
+					<input class="setting-option option_wrong_answ_behavior" type="checkbox" id="wrongAnswBehavior" value="0">
+					<label class="option-label" for="wrongAnswBehavior">Добавить слово в закладки, если оно дважды написано неверно</label>
+				</li>
+				<li class="setting-item">
+					<input class="setting-option" type="radio" id="" value="0">
+					<label class="option-label" for="">Схема перемещения по словам для режима Авто</label>
+				</li>
+			</ul>
+		</div>
+	</div>
   <main class="main">
 		<div class="navigation">
 			<button class="scale button_paginator to_first_word">
@@ -63,6 +99,9 @@
 					<input type="number" name="until_set" id="until_setting1" class="until_setting">
 				</div> -->
 			</div>
+			<!-- TODO: make structure like area_editable including css overflow
+			propertie and other properties related to it because long string does
+			not fit perimeter of area_editable-->
 			<div class="area output_area">
 				<div class="bookmark scale"></div>
 				<!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" class="bookmark"><path fill="#002033" fill-opacity=".8" d="M6.837 1.667h6.326c.928 0 1.265.096 1.604.278.34.182.607.448.788.787.182.34.278.677.278 1.605v13.115a.833.833 0 0 1-1.348.655L10 14.583l-4.485 3.524a.833.833 0 0 1-1.348-.655V4.337c0-.928.096-1.265.278-1.605.181-.339.448-.605.787-.787.34-.182.677-.278 1.605-.278Zm7.33 2.67c0-.355-.016-.578-.041-.707a.294.294 0 0 0-.04-.112.228.228 0 0 0-.104-.103.294.294 0 0 0-.112-.04 4.17 4.17 0 0 0-.707-.042H6.837a4.17 4.17 0 0 0-.707.041.294.294 0 0 0-.112.04.229.229 0 0 0-.103.104.294.294 0 0 0-.04.112 4.17 4.17 0 0 0-.042.707v11.4l3.137-2.464a1.667 1.667 0 0 1 2.06 0l3.137 2.465v-11.4Z"/></svg> -->
@@ -75,6 +114,7 @@
 		</div>
 		<div class="opposite_to_navigation"></div>
 	</main>
-	<script src = "script.js"></script>
+	<script src = "script.js" type="module"></script>
+	<script src = "data.js" type="module"></script>
 </body>
 </html>
