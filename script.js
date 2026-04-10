@@ -324,7 +324,8 @@ function setLocalStorage() {
   // localStorage.setItem('optionRightAnswBehavior', +optionRightAnswBehavior.checked);
   // localStorage.setItem('optionWrongAnswBehavior', +optionWrongAnswBehavior.checked);
 }
-window.addEventListener('beforeunload', setLocalStorage);
+window.addEventListener('visibilitychange', setLocalStorage);
+window.addEventListener('pagehide', setLocalStorage);
 
 function getLocalStorage() {
   if (localStorage.getItem('count')) {
